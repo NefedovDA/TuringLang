@@ -1,0 +1,38 @@
+@ {
+  alphabet: 0 1
+  blanks: _
+  special: +
+  start: S
+  accept: AC
+  reject: AJ
+}
+
+# a - one char
+# * - all chars from alphabet
+# _ - all cars from blanks
+# + - all chars from special
+# _* - could combine it
+# all - all chars, equal _+*
+
+
+env GoToEnd {
+  S:
+    all ^ MOVE
+  MOVE:
+    *+ >
+    # will be: GoToEnd_S [0, 1, _, +] -> GoToEnd_S [..] >
+    _ ^ T
+}
+
+env Return {
+  S:
+    0 ^ $AC _
+    # will be: Return_S 0 -> AC _ ^
+    1 ^ $AJ
+    _ ^ T
+}
+
+S:
+  all ^ GoToEnd_S
+
+GoToEnd all ^ AC
