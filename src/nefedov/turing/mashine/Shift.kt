@@ -1,7 +1,5 @@
 package nefedov.turing.mashine
 
-import java.lang.IllegalArgumentException
-
 data class Shift(val direction: Direction, val atChar: String, val toState: State, val putChar: String) {
     enum class Direction(private val strPresent: String) {
         RIGHT(">"),

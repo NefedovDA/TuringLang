@@ -4,6 +4,7 @@ import nefedov.turing.mashine.Shift
 import nefedov.turing.mashine.State
 import java.io.BufferedReader
 import java.io.Reader
+import java.text.ParseException
 import java.util.regex.Pattern
 import kotlin.streams.toList
 
@@ -21,10 +22,16 @@ class Parser private constructor(input: Reader) {
 
     private fun readPreprocessor(): Preprocessor {
         val values = Preprocessor.getDefaultValues()
-        while (lines[lineInd].startsWith("@")) {
+        while (lines[lineInd].startsWith(dog)) {
             val line = lines[lineInd++]
-            val (name, value) = line.substring(1).split(": ")
-            values[name] = value
+            val (name, value) = line.substring(1).split(":")
+            if (!values.contains(name)) {
+                throw ParseException("No such preprocessor option: $name", lineInd)
+            }
+            if (value.isBlank()) {
+                throw ParseException("Empty value", lineInd)
+            }
+            values[name] = value.trim()
         }
         return Preprocessor(values)
     }
@@ -49,13 +56,17 @@ class Parser private constructor(input: Reader) {
                     // charAt operation [toState [putChar]]
                     val tokens = line.trim().split(" ")
 
+                    if (tokens.size < 2 || tokens.size > 4) {
+                        throw ParseException("Unexpected line", lineInd)
+                    }
+
                     val atChars = tokens[0]
 
                     val operation = tokens[1]
 
                     val rawName = tokens.getOrNull(2)
                     val toStateName = when {
-                        rawName == null -> state.name
+                        rawName == null || rawName == "." -> state.name
                         rawName.startsWith(top) -> rawName.substring(1)
                         else -> prefix + rawName
                     }
@@ -87,7 +98,12 @@ class Parser private constructor(input: Reader) {
 
     companion object {
         fun parse(input: Reader): Result {
-            return Parser(input).parse()
+            try {
+                return Parser(input).parse()
+            } catch (e: ParseException) {
+                System.err.println("In line ${e.errorOffset}: ${e.message}")
+                throw e
+            }
         }
     }
 }
