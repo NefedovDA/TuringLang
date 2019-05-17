@@ -1,7 +1,7 @@
 package nefedov.turing.mashine
 
 data class State(val name: String) {
-    val shifts: List<Shift> = listOf()
+    val shifts = mutableListOf<Shift>()
 
     override fun toString(): String {
         return buildString {
