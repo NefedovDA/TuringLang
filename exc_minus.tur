@@ -1,0 +1,28 @@
+@s: s
+@ac: ac
+@rj: rj
+
+@: * 01
+
+-- This simple example program that minus one from a number.
+-|
+-| _111000_
+-|  ^
+-| _110111_
+-|  ^
+
+s:
+  `*` >
+  _   < minus
+
+minus:
+  0 < . 1
+  1 ^ goToStart_s 0
+
+-- For example will use env hear
+
+env goToStart
+  s:
+    01 <
+    _  > $ac
+!env
