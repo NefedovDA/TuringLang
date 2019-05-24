@@ -12,8 +12,8 @@ object Interpreter {
         println()
     }
 
-    fun interpret(description: Description, input: String) = with(description) {
-        val tape = Tape(input, description.blank, 3)
+    fun interpret(description: Description, input: String, offset: Int) = with(description) {
+        val tape = Tape(input, description.blank, offset)
         var atChar = tape.run()
         var currentState = states[start] ?: throw Exception("NO START STATE")
         print(tape, currentState)
