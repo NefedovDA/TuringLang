@@ -11,11 +11,11 @@
 
 **Comments and blank lines:**
 
-Empty lines or that start with `--` will be ignored by the compiler.
+Empty lines or that start with `--` or `-|` will be ignored by the compiler.
 
 **State description:**
 
-```$xslt
+```
 NAME:
   AT_CHAR OPERATION [TO_STATE [PUT_CHAR]]
   ...
@@ -35,6 +35,31 @@ Where:
                Could be omitted or replace with `.`, by default will be `NAME`.
 * `PUT_CHAR` - symbol that will be put at current tape's turing machine of turing machine.
                Could be omitted, default value is symbol at the current cell of tape.
+               
+**Environments:**
+
+**Creating**
+If you want to use a simple names for states in a current local task, 
+you could wrap all states of this task in  `env` block like: 
+```
+env NAME 
+  <STATE_1>
+  <STATE_2>
+  ... 
+!env
+``` 
+
+**Usage**
+
+Now it's only add suffix `NAME` to names of wrapped names. So you could use it like common states like:
+```
+S:
+  0 ^ NAME_S 
+
+NAME_T: 
+  _ ^ AC 
+```
+Remember that **all** names will be converted. For use names out of environment add prefix `$` before the name.
                
 ## Compiler futures
 

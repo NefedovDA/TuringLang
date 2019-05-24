@@ -15,8 +15,10 @@ object Parser {
         val NAME = Regex("([A-Za-z][A-Za-z0-1_]*)")
         val SPACES = Regex(S)
         val STATE_NAME = Regex("^\\s*$NAME:")
-        val COMMENT = Regex("^\\s*--.*")
-        val SHIFT = Regex("^$S?($SYM+|`$SYM+`)+$S[<^>]($S($NAME|\\.)($S$SYM)?)?")
+        val COMMENT = Regex("^\\s*(--|-\\|).*")
+        val SHIFT = Regex("^$S?($SYM+|`$SYM+`)+$S[<^>]($S(\\$?$NAME|\\.)($S$SYM)?)?")
+        val ENV_START = Regex("env$S$NAME")
+        val ENV_END = Regex("^!env")
 
         object Directive {
             val GENERIC = Regex("^@.*:$S.*")
@@ -30,17 +32,19 @@ object Parser {
 
     private object Constants {
         const val NAME_OMITTED = "."
+        const val OUT_PREFIX = "$"
     }
 
     private class Worker(val input: BufferedReader) {
         private var currentState = State("") /* aka no value */
         private var currentLine = 0
+        private var prefix = ""
 
         private val description = Description()
         private val userTemplates: MutableMap<String, String> = HashMap()
 
         private fun setCurrentState(line: String) {
-            val stateName = Patterns.NAME.find(line)?.value ?: return
+            val stateName = prefix + Patterns.NAME.find(line)?.value
             currentState = description.states.getOrPut(stateName) { State(stateName) }
         }
 
@@ -82,9 +86,11 @@ object Parser {
             val toStateName = tokens
                 .getOrElse(2) { currentState.name }
                 .run {
-                    when (this) {
-                        Constants.NAME_OMITTED -> currentState.name
-                        else -> this
+                    when {
+                        this == currentState.name -> currentState.name
+                        this == Constants.NAME_OMITTED -> currentState.name
+                        startsWith(Constants.OUT_PREFIX) -> substring(1)
+                        else -> prefix + this
                     }
                 }
             val toState = description.states.getOrPut(toStateName) { State(toStateName) }
@@ -93,6 +99,14 @@ object Parser {
                 val atChar = "$it"
                 currentState.addShift(atChar, operation, toState, tokens.getOrElse(3) { atChar })
             }
+        }
+
+        private fun setPrefix(line: String) {
+            prefix = line.split(Patterns.SPACES)[1] + "_"
+        }
+
+        private fun removePrefix() {
+            prefix = ""
         }
 
         fun parse(): Description {
@@ -106,11 +120,15 @@ object Parser {
                         Unit
                     Patterns.STATE_NAME.matches(line) -> /* Update current state object */
                         setCurrentState(line)
-                    Patterns.SHIFT.matches(line) ->  /* line as shift description */
+                    Patterns.ENV_START.matches(line) -> /* Start of environment */
+                        setPrefix(line)
+                    Patterns.ENV_END.matches(line) -> /* End of environment */
+                        removePrefix()
+                    Patterns.SHIFT.matches(line) ->  /* Line as shift description */
                         setShift(line)
-                    Patterns.Directive.GENERIC.matches(line) -> /* line as compiler directive */
+                    Patterns.Directive.GENERIC.matches(line) -> /* Line as compiler directive */
                         setDirective(line)
-                    else -> /* exception */
+                    else -> /* Exception */
                         throw ParseException("Unknown line.", currentLine)
                 }
             }

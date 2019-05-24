@@ -5,6 +5,7 @@
 
 ###Как запустить:
 * Делаем: `git clone https://github.com/NefedovDA/TuringLang.git` 
-* Запускаем `nefedov.turing.retransmit.kt` 
+* Запускаем файл `nefedov.turing.retransmit.kt` для конвертации, 
+  а `nefedov.turing.visual.kt` для дебага.  
 
 Для дополнительной информации смотри: `Futures.md`
